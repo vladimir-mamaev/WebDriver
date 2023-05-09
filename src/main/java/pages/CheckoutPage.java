@@ -4,13 +4,13 @@ import com.codeborne.selenide.CollectionCondition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
 import dto.DeliveryAddress;
-import org.openqa.selenium.By;
 import page.AbstractPage;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.codeborne.selenide.Selectors.*;
 import static com.codeborne.selenide.Selenide.*;
 import static helper.WebDriverWaiter.waitForVisibilityOfElement;
 
@@ -19,17 +19,17 @@ public class CheckoutPage extends AbstractPage {
 
     private SelenideElement buyNowButton = $x("//button[@id='buyNowButton']");
 
-    private SelenideElement emailErrorMessage = $(By.id("email-errors"));
+    private SelenideElement emailErrorMessage = $(byId("email-errors"));
 
-    private SelenideElement fullNameErrorMessage = $(By.id("delivery-fullName-errors"));
+    private SelenideElement fullNameErrorMessage = $(byId("delivery-fullName-errors"));
 
-    private SelenideElement deliveryAddressLine1ErrorMessage = $(By.id("delivery-addressLine1-errors"));
+    private SelenideElement deliveryAddressLine1ErrorMessage = $(byId("delivery-addressLine1-errors"));
 
-    private SelenideElement deliveryCityErrorMessage = $(By.id("delivery-city-errors"));
+    private SelenideElement deliveryCityErrorMessage = $(byId("delivery-city-errors"));
 
-    private SelenideElement deliveryPostCodeErrorMessage = $(By.id("delivery-postCode-errors"));
+    private SelenideElement deliveryPostCodeErrorMessage = $(byId("delivery-postCode-errors"));
 
-    private SelenideElement paymentErrorMessages = $(By.className("buynow-error-msg"));
+    private SelenideElement paymentErrorMessages = $(byClassName("buynow-error-msg"));
 
     private SelenideElement subTotal = $x("//div[@aria-label='Sub-total 74,28 €']//dd[contains(text(),'74')]");
 
@@ -92,7 +92,7 @@ public class CheckoutPage extends AbstractPage {
     }
 
     public CheckoutPage getDeliveryCountryAndorra(String country) {
-        chooseOption(getElementByLocator(By.xpath(String.format("//li[@name='option-AD']//a[contains(text(), '%s')]", country))));
+        chooseOption(getElementByLocator(byXpath(String.format("//li[@name='option-AD']//a[contains(text(), '%s')]", country))));
         return this;
     }
 

@@ -7,6 +7,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 
 import static com.codeborne.selenide.Condition.visible;
+import static com.codeborne.selenide.Selectors.byClassName;
 import static com.codeborne.selenide.Selenide.*;
 import static constant.Constants.INITIAL_PAGE_NAME;
 import static constant.Constants.INITIAL_PAGE_URL;
@@ -23,7 +24,7 @@ public abstract class AbstractPage {
 
     public boolean isElementVisible(String string) {
         try {
-            $(By.className(string)).should(visible);
+            $(byClassName(string)).should(visible);
             return true;
         } catch (org.openqa.selenium.NoSuchElementException e) {
             return false;
