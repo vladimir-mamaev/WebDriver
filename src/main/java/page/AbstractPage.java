@@ -1,70 +1,78 @@
 package page;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.ui.Select;
 
+import com.codeborne.selenide.Selenide;
+import com.codeborne.selenide.SelenideElement;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
+
+import static com.codeborne.selenide.Condition.visible;
+import static com.codeborne.selenide.Selenide.*;
 import static constant.Constants.INITIAL_PAGE_NAME;
 import static constant.Constants.INITIAL_PAGE_URL;
-import static singltoneDriver.SingletonDriver.getDriver;
 
 
 public abstract class AbstractPage {
 
-    public AbstractPage() { PageFactory.initElements(getDriver(), this);}
 
-    public void openPage(String name){
-   if(INITIAL_PAGE_NAME.equals(name)){ getDriver().get(INITIAL_PAGE_URL);}
-}
+    public void openPage(String name) {
+        if (INITIAL_PAGE_NAME.equals(name)) {
+            open(INITIAL_PAGE_URL);
+        }
+    }
 
-    public boolean isElementPresent(String string) {
+    public boolean isElementVisible(String string) {
         try {
-           getDriver().findElement(By.className(string));
+            $(By.className(string)).should(visible);
             return true;
         } catch (org.openqa.selenium.NoSuchElementException e) {
             return false;
         }
     }
 
-    public  void clickButtonUsingJS(WebElement button) {
-        JavascriptExecutor jse = (JavascriptExecutor) getDriver();
-        jse.executeScript("arguments[0].click();", button);
+    public void clickButtonUsingJS(SelenideElement button) {
+        executeJavaScript("arguments[0].click();", button);
     }
 
-    public  void scrollDownThePage() {
-        JavascriptExecutor jse = (JavascriptExecutor) getDriver();
-        jse.executeScript("window.scrollBy(0,350)");
+    public void scrollDownThePage() {
+        Selenide.executeJavaScript("window.scrollBy(0,350)");
     }
 
-    public static void chooseOption(WebElement element) {
-        Actions action = new Actions(getDriver());
-        action.click(element)
+    public void chooseOption(SelenideElement element) {
+        actions().click(element)
                 .perform();
     }
 
-    public void clickAndFillCardFields(WebElement element, String string) {
-        Actions action = new Actions(getDriver());
-        action.moveToElement(element)
+    public void clickAndFillCardFields(SelenideElement element, String string) {
+
+        actions().moveToElement(element)
                 .click(element)
                 .sendKeys(Keys.chord(string))
                 .perform();
     }
 
-    public void clickAndHold(WebElement element) {
-        Actions action = new Actions(getDriver());
-        action.moveToElement(element)
+    public void clickAndHold(SelenideElement element) {
+
+        actions().moveToElement(element)
                 .clickAndHold(element)
                 .release()
                 .perform();
     }
 
-    public void selectOptions(WebElement element, String value) {
-        Select statusesSelect = new Select(element);
-        statusesSelect.selectByVisibleText(value);
+    public void selectOptions(SelenideElement element, String value) {
+        element.selectOption(value);
+    }
+
+    public void clickOnWebElement(SelenideElement element) {
+        element.click();
+    }
+
+    public SelenideElement getElementByLocator(By locator) {
+        return $(locator);
+    }
+
+    public String getTextOfElement(SelenideElement element) {
+        return element.getText();
     }
 
 }

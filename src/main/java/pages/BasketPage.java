@@ -1,28 +1,27 @@
 package pages;
 
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.FindBy;
+import com.codeborne.selenide.SelenideElement;
 import page.AbstractPage;
+
+import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.$x;
 
 
 public class BasketPage extends AbstractPage {
+    private SelenideElement deliveryCost = $x("//dd[text()='FREE']");
+    private SelenideElement total = $x("//dd[text()='74,28 €']");
 
-    @FindBy(xpath = "//dd[text()='FREE']")
-    private WebElement deliveryCost;
-    @FindBy(xpath = "//dd[text()='85,62 €']")
-    private WebElement total;
-    @FindBy(xpath = "//a[@class='checkout-btn btn first-variant']")
-    private WebElement checkoutButton;
+    private SelenideElement checkoutButton = $("//a[@class='checkout-btn btn first-variant']");
 
-    public WebElement getCheckoutButton() {
+    public SelenideElement getCheckoutButton() {
         return checkoutButton;
     }
 
-    public WebElement getDeliveryCost() {
+    public SelenideElement getDeliveryCost() {
         return deliveryCost;
     }
 
-    public WebElement getTotal() {
+    public SelenideElement getTotal() {
         return total;
     }
 }

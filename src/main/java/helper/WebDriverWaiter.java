@@ -1,29 +1,26 @@
 package helper;
 
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import com.codeborne.selenide.Condition;
+import com.codeborne.selenide.SelenideElement;
+import com.codeborne.selenide.impl.Waiter;
 
-import static constant.Constants.IMPLICITLY_WAIT_TIMEOUT;
-import static singltoneDriver.SingletonDriver.getDriver;
+import java.time.Duration;
+
+import static com.codeborne.selenide.Selenide.executeJavaScript;
+import static constant.Constants.TIME_TO_WAIT_ELEMENT;
+
 
 public class WebDriverWaiter {
-    protected WebDriverWait wait;
+    private static final String COMPLETE = "complete";
+    private static final long INTERVAL = 3;
 
-    public WebDriverWaiter() {
-        wait = new WebDriverWait(getDriver(), IMPLICITLY_WAIT_TIMEOUT);
+    public static void waitForPageReadyState() {
+        new Waiter().wait(TIME_TO_WAIT_ELEMENT, INTERVAL, () ->
+                COMPLETE.equals(executeJavaScript("return document.readyState")));
     }
 
-    public static void waitForPageReadyState(int timeToWait) {
-        new WebDriverWait(getDriver(), timeToWait).until(
-                webDriver -> ((JavascriptExecutor) webDriver)
-                        .executeScript("return document.readyState")
-                        .equals("complete"));
-    }
-    public static void waitForVisibilityOfElement(int timeToWait, WebElement element) {
-        WebDriverWait wait = new WebDriverWait(getDriver(), timeToWait);
-        wait.until(ExpectedConditions.elementToBeClickable(element));
+    public static void waitForVisibilityOfElement(SelenideElement element) {
+        element.shouldBe(Condition.interactable, Duration.ofSeconds(10));
     }
 
 }

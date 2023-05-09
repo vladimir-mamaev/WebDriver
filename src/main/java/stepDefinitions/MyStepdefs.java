@@ -1,47 +1,54 @@
 package stepDefinitions;
 
-import dto.*;
+import com.codeborne.selenide.ElementsCollection;
+import com.codeborne.selenide.Selenide;
+import com.codeborne.selenide.WebDriverRunner;
 import dto.Error;
+import dto.*;
 
 import io.cucumber.java.After;
 import io.cucumber.java.DataTableType;
+import io.cucumber.java.Scenario;
 import io.cucumber.java.Transpose;
 import io.cucumber.java.en.And;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.OutputType;
 import pages.BasketPage;
 import pages.CheckoutPage;
-import pages.SearchPage;
-import io.cucumber.java.Before;
-import io.cucumber.java.en.Given;
 import pages.InitialHomePage;
+import pages.SearchPage;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static constant.Constants.IMPLICITLY_WAIT_TIMEOUT;
-import static constant.Constants.TIME_TO_WAIT_ELEMENT;
+import static com.codeborne.selenide.Selenide.*;
 import static helper.WebDriverWaiter.waitForPageReadyState;
 import static helper.WebDriverWaiter.waitForVisibilityOfElement;
-import static org.junit.Assert.*;
-import static singltoneDriver.SingletonDriver.getDriver;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 public class MyStepdefs {
+
+
     public MyStepdefs() {
     }
+
+    @After
+    public void CreateScreenshotAfterTest(Scenario scenario) {
+        if (scenario.isFailed()) {
+            String fileName = "Screenshot of" + scenario.getName();
+            scenario.attach(screenshot(OutputType.BYTES), "image/png", fileName);
+        }
+    }
+
 
     InitialHomePage initialHomePage = new InitialHomePage();
     SearchPage searchPage = new SearchPage();
     BasketPage basketPage = new BasketPage();
     CheckoutPage checkoutPage = new CheckoutPage();
-    @After
-    public void tearDown() {
-        getDriver().quit();
-    }
 
     @DataTableType
     public CardDetails getCardDetails(@Transpose Map<String, String> entry) {
@@ -103,77 +110,73 @@ public class MyStepdefs {
         );
     }
 
-    @Before
-    public void testSetUp() {
-        getDriver();
-    }
-
     @Given("I am an anonymous customer with clear cookies")
     public void clearCookiesAsAnon() {
-        getDriver().manage().deleteAllCookies();
+        Selenide.clearBrowserCookies();
     }
 
     @When("I open the {string}")
     public void openInitialHomePage(String pageName) {
 
         initialHomePage.openPage(pageName);
-        waitForPageReadyState(IMPLICITLY_WAIT_TIMEOUT);
+        waitForPageReadyState();
     }
 
     @And("I search for {string}")
     public void searchForThinkingInJava(String bookName) {
         initialHomePage.enterSearchField(bookName);
-        waitForPageReadyState(IMPLICITLY_WAIT_TIMEOUT);
+        waitForPageReadyState();
     }
 
     @Then("I am redirected to the {string}")
     @And("I am redirected to a {string}")
     public void redirectToPage(String pageName) {
-        assertTrue(getDriver().getCurrentUrl().contains(pageName.substring(0, 6).toLowerCase()));
-        waitForPageReadyState(IMPLICITLY_WAIT_TIMEOUT);
+        assertThat(WebDriverRunner.getWebDriver().getCurrentUrl().contains(pageName.substring(0, 6).toLowerCase()))
+                .as("Current url doesn't match").isTrue();
+        waitForPageReadyState();
     }
 
     @And("Search results contain the following products")
     public void checkResultsContainsFollowingBook(List<String> books) {
         List<String> searchList = getListOfValue(searchPage.getListOfBooks());
-        assertTrue(new HashSet<>(searchList).containsAll(books));
+        assertThat((searchList).containsAll(books));
     }
 
     @And("I apply the following search filters")
-    public void applyFollowingSearchFilters(Map<String, String> map) {
-        Filters filters = convertFilters(map);
-        searchPage.selectOptions(searchPage.getFilterPrice(), filters.getPriceRange());
-        searchPage.selectOptions(searchPage.getFilterAvailability(), filters.getAvailability());
-        searchPage.selectOptions(searchPage.getFilterLang(), filters.getLanguage());
-        searchPage.selectOptions(searchPage.getFilterFormat(), filters.getFormat());
+    public void applyFollowingSearchFilters(Filters filters) {
+
+        searchPage.applyPriceFilter(filters);
         searchPage.clickRefineResultsButton();
     }
 
     @Then("Search results contain only the following products")
     public void searchResultsContainOnlyTheFollowingProducts(List<String> listOfBooks) {
         List<String> searchList = getListOfValue(searchPage.getListOfBooks());
-        assertEquals(searchList, listOfBooks);
+        assertThat(searchList).as("Book model change").isEqualTo(listOfBooks);
     }
 
     @When("I click 'Add to basket' button for product with name {string}")
     public void productAddToBasket(String bookName) {
-        List<String> searchList = getListOfValue(searchPage.getListOfBooks());
-        searchPage.getListOfButton().get(searchList.indexOf(bookName)).click();
+        searchPage.clickOnButton(bookName);
     }
 
     @And("I select 'Basket Checkout' in basket pop-up")
     public void clickOnCheckout() {
-        waitForPageReadyState(IMPLICITLY_WAIT_TIMEOUT);
-        waitForVisibilityOfElement(TIME_TO_WAIT_ELEMENT, searchPage.getBasketCheckoutButton());
+        waitForPageReadyState();
+        waitForVisibilityOfElement(searchPage.getBasketCheckoutButton());
         searchPage.clickButtonUsingJS(searchPage.getBasketCheckoutButton());
     }
 
     @And("Basket order summary is as following:")
     public void checkBasketOrderSummary(@Transpose Map<String, String> entry) {
-        waitForPageReadyState(IMPLICITLY_WAIT_TIMEOUT);
+        waitForPageReadyState();
         Basket basket = convertBasket(entry);
-        assertEquals(basketPage.getDeliveryCost().getText(), (basket.getDeliveryCost()));
-        assertEquals(basketPage.getTotal().getText(), (basket.getTotal()));
+        assertThat(basketPage.getTextOfElement(basketPage.getDeliveryCost()))
+                .as("Delivery cost changed")
+                .isEqualTo(basket.getDeliveryCost());
+        assertThat(basketPage.getTextOfElement(basketPage.getTotal()))
+                .as("Total cost changed")
+                .isEqualTo(basket.getTotal());
     }
 
     @When("I click 'Checkout' button on 'Basket' page")
@@ -184,51 +187,59 @@ public class MyStepdefs {
     @When("I click 'Buy now' button")
     public void clickOnBuyNowButton() {
         checkoutPage.clickOnBuyNowButton();
-        waitForPageReadyState(IMPLICITLY_WAIT_TIMEOUT);
+        waitForPageReadyState();
     }
 
     @Then("the following validation error messages are displayed on 'Delivery Address' form:")
     public void validationErrorMessages(List<Map<String, String>> maps) {
         List<String> list = maps.stream().map(this::getListOfError)
                 .map(Error::getValidationErrorMessage).collect(Collectors.toList());
-        assertEquals(list, checkoutPage.getListFromWebElements());
+        assertThat(list).as("Error messages changed")
+                .isEqualTo(checkoutPage.getListFromWebElements());
     }
 
     @Then("the following validation error messages are displayed on 'Payment' form:")
     public void checkValidationErrorsArePresent(String error) {
         checkoutPage.getPaymentErrorMessages().isDisplayed();
-        String expected = checkoutPage.getPaymentErrorMessages().getText().replaceAll("\n", ", ");
-        assertTrue(expected.equals(error));
+        String expected = checkoutPage.getTextOfElement(checkoutPage.getPaymentErrorMessages())
+                .replaceAll("\n", ", ");
+        assertThat(expected.equals(error));
     }
 
     @And("Checkout order summary is as following:")
     public void checkCheckoutOrderSummary(List<Map<String, String>> maps) {
-        Optional<CheckoutOrderSummary> checkoutOrderSummary = maps.stream().map(this::getCheckoutOrderSummary).findAny();
-        assertEquals(checkoutPage.getSubTotal().getText(), checkoutOrderSummary.get().getSubTotal());
-        assertEquals(checkoutPage.getDelivery().getText(), checkoutOrderSummary.get().getDelivery());
-        assertEquals(checkoutPage.getVat().getText(), checkoutOrderSummary.get().getVat());
-        assertEquals(checkoutPage.getTotal().getText(), checkoutOrderSummary.get().getTotal());
+        CheckoutOrderSummary checkoutOrderSummary = maps.stream().map(this::getCheckoutOrderSummary).findAny()
+                .orElseThrow(() -> new NullPointerException("Mapping DataTable does not work"));
+
+        assertThat(checkoutPage.getTextOfElement(checkoutPage.getSubTotal()))
+                .as("Sub total changed")
+                .isEqualTo(checkoutOrderSummary.getSubTotal());
+        assertThat(checkoutPage.getTextOfElement(checkoutPage.getDelivery()))
+                .as("Delivery cost changed")
+                .isEqualTo(checkoutOrderSummary.getDelivery());
+        assertThat(checkoutPage.getTextOfElement(checkoutPage.getVat()))
+                .as("Vat changed")
+                .isEqualTo(checkoutOrderSummary.getVat());
+        assertThat(checkoutPage.getTextOfElement(checkoutPage.getTotal()))
+                .as("Total price changed")
+                .isEqualTo(checkoutOrderSummary.getTotal());
     }
 
     @And("I checkout as a new customer with email {string}")
     public void checkoutAsANewCustomer(String email) {
-        getDriver().navigate().refresh();
+        refresh();
         checkoutPage.getEmail().sendKeys(email);
     }
 
     @When("I fill delivery address information manually:")
     public void fillDeliveryAddress(List<Map<String, String>> maps) {
-        Optional<DeliveryAddress> deliveryAddress = maps.stream().map(this::getDeliveryAddress).findAny();
+        DeliveryAddress deliveryAddress = maps.stream().map(this::getDeliveryAddress).findAny()
+                .orElseThrow(() -> new NullPointerException("Mapping DataTable does not work"));
         checkoutPage.clickAndHold(checkoutPage.getDeliveryCountry());
-        waitForVisibilityOfElement(TIME_TO_WAIT_ELEMENT, checkoutPage.getDeliveryCountryAndorra(deliveryAddress.get().getDeliveryCountry()));
-        checkoutPage.chooseOption(checkoutPage.getDeliveryCountryAndorra(deliveryAddress.get().getDeliveryCountry()));
-        waitForVisibilityOfElement(TIME_TO_WAIT_ELEMENT, checkoutPage.getDeliveryAddressLine1());
-        checkoutPage.getDeliveryFullNameField().sendKeys(deliveryAddress.get().getFullName());
-        checkoutPage.getDeliveryAddressLine1().sendKeys(deliveryAddress.get().getAddressLine1());
-        checkoutPage.getDeliveryAddressLine2().sendKeys(deliveryAddress.get().getAddressLine2());
-        checkoutPage.getDeliveryCity().sendKeys(deliveryAddress.get().getTownCity());
-        checkoutPage.getDeliveryCounty().sendKeys(deliveryAddress.get().getCountyState());
-        checkoutPage.getDeliveryPostCode().sendKeys(deliveryAddress.get().getPostCode());
+        checkoutPage.waitForDeliveryCountry(deliveryAddress);
+        checkoutPage.getDeliveryCountryAndorra(deliveryAddress.getDeliveryCountry());
+        checkoutPage.fillDeliveryAddress(deliveryAddress);
+
     }
 
     @When("I enter my card details")
@@ -244,12 +255,22 @@ public class MyStepdefs {
 
     @Then("the following validation error messages are not displayed on 'Payment' form:")
     public void validationErrorMessagesAreNotDisplayed() {
-        assertFalse(checkoutPage.isElementPresent("buynow-error-msg"));
-
+        assertThat(checkoutPage.isElementVisible("buynow-error-msg")).isFalse();
     }
 
-    private List<String> getListOfValue(List<WebElement> list) {
-        return list.stream().map(WebElement::getText).collect(Collectors.toList());
+    private List<String> getListOfValue(ElementsCollection list) {
+        return list.texts();
+    }
+
+    @Given("^I open the '(.*)' page$")
+    public void openPage(String url) {
+        open(url);
+    }
+
+    @Then("^I verify header is '(.*)'$")
+    public void verifyHeader(String expectedHeaderName) {
+        assertThat(expectedHeaderName).as("Title change").isEqualTo(Selenide.title());
+        System.out.println(Selenide.title());
     }
 
 }

@@ -1,14 +1,16 @@
 package pages;
 
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.FindBy;
+
+import com.codeborne.selenide.SelenideElement;
+
 import page.AbstractPage;
 
+import static com.codeborne.selenide.Selenide.$x;
+
 public class InitialHomePage extends AbstractPage {
-    @FindBy(xpath = "//input[@name = 'searchTerm']")
-    private WebElement searchField;
+    private final SelenideElement searchField = $x("//input[@name = 'searchTerm']");
+
     public void enterSearchField(String bookName) {
-        searchField.sendKeys(bookName, Keys.ENTER);
+        searchField.append(bookName).pressEnter();
     }
 }

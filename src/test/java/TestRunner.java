@@ -4,10 +4,11 @@ import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
 @CucumberOptions(
-        features = {"src/main/resources/features"},
-        glue = "stepDefs",
-        plugin = {"json:target/cucumber-reports/Cucumber.json"},
-        tags = "@Runme"
+        features = {"src/main/resources/DesktopCheckoutForGuestUser.feature"},
+        glue = "stepDefinitions",
+        plugin = {"pretty", "html:target/cucumber-reports"
+                , "com.epam.reportportal.cucumber.ScenarioReporter"}
+        ,publish = true
 )
 
 public class TestRunner {

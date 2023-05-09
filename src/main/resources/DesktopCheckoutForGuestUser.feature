@@ -54,3 +54,6 @@ Feature: Desktop Checkout for Guest User
       | Expiry Year  | 2022             |
       | Expiry Month | 03               |
       | Cvv          | 123              |
+  Scenario: User opens Facebook Home Page
+    Given I open the 'https://facebook.com' page
+    When I verify header is 'Facebook - log in or sign up'
